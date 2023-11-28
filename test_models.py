@@ -79,7 +79,7 @@ def accuracy(output, target, topk=(1,)):
     correct = pred.eq(target.view(1, -1).expand_as(pred))
     res = []
     for k in topk:
-         correct_k = correct[:k].view(-1).float().sum(0)
+         correct_k = correct[:k].reshape(-1).float().sum(0)
          res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
@@ -277,7 +277,7 @@ for i, data_label_pairs in enumerate(zip(*data_iter_list)):
         for p, g in zip(ensembled_predict, this_label.cpu().numpy()):
             output.append([p[None, ...], g])
         cnt_time = time.time() - proc_start_time
-        prec1, prec5 = accuracy(torch.from_numpy(ensembled_predict), this_label, topk=(1, 5))
+        prec1, prec5 = accuracy(torch.from_numpy(ensembled_predict), this_label, topk=(1, 2))
         top1.update(prec1.item(), this_label.numel())
         top5.update(prec5.item(), this_label.numel())
         if i % 20 == 0:

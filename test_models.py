@@ -6,6 +6,7 @@
 # Notice that this file has been modified to support ensemble testing
 
 import argparse
+import os.path
 import time
 
 import torch.nn.parallel
@@ -155,8 +156,7 @@ for this_weights, this_test_segments, test_file in zip(weights_list, test_segmen
     input_size = net.scale_size if args.full_res else net.input_size
     if args.test_crops == 1:
         cropping = torchvision.transforms.Compose([
-            GroupScale(net.scale_size),
-            GroupCenterCrop(input_size),
+            GroupCenterPad(input_size)
         ])
     elif args.test_crops == 3:  # do not flip, so only 5 crops
         cropping = torchvision.transforms.Compose([
@@ -293,24 +293,22 @@ video_labels = [x[1] for x in output]
 
 if args.csv_file is not None:
     print('=> Writing result to csv file: {}'.format(args.csv_file))
-    with open(test_file_list[0].replace('test_videofolder.txt', 'category.txt')) as f:
+    with open(os.path.join(os.path.dirname(test_file_list[0]), 'category.txt')) as f:
         categories = f.readlines()
     categories = [f.strip() for f in categories]
     with open(test_file_list[0]) as f:
-        vid_names = f.readlines()
-    vid_names = [n.split(' ')[0] for n in vid_names]
+        test_file_lines = f.readlines()
+    vid_names = []
+    for v in test_file_lines:
+        path, n_frame, cls = v.split(' ')
+        vid_names.extend([path] * (int(n_frame) - test_segments_list[0] + 1))
     assert len(vid_names) == len(video_pred)
-    if args.dataset != 'somethingv2':  # only output top1
-        with open(args.csv_file, 'w') as f:
-            for n, pred in zip(vid_names, video_pred):
-                f.write('{};{}\n'.format(n, categories[pred]))
-    else:
-        with open(args.csv_file, 'w') as f:
-            for n, pred5 in zip(vid_names, video_pred_top5):
-                fill = [n]
-                for p in list(pred5):
-                    fill.append(p)
-                f.write('{};{};{};{};{};{}\n'.format(*fill))
+
+    # only output top1
+    with open(args.csv_file, 'w') as f:
+        for n, pred in zip(vid_names, video_pred):
+            f.write('{};{}\n'.format(n, categories[pred]))
+
 
 
 cf = confusion_matrix(video_labels, video_pred).astype(float)

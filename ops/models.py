@@ -381,8 +381,9 @@ class TSN(nn.Module):
     def get_augmentation(self, flip=True):
         if self.modality == 'RGB':
             if flip:
-                return torchvision.transforms.Compose([GroupMultiScaleCrop(self.input_size, [1, .875, .75, .66]),
-                                                       GroupRandomHorizontalFlip(is_flow=False)])
+                # return torchvision.transforms.Compose([GroupMultiScaleCrop(self.input_size, [1, .875, .75, .66]),
+                #                                        GroupRandomHorizontalFlip(is_flow=False)])
+                return torchvision.transforms.Compose([GroupRandomHorizontalFlip(is_flow=False)])
             else:
                 print('#' * 20, 'NO FLIP!!!')
                 return torchvision.transforms.Compose([GroupMultiScaleCrop(self.input_size, [1, .875, .75, .66])])

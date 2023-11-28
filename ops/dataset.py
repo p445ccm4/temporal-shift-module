@@ -2,7 +2,6 @@
 # arXiv:1811.08383
 # Ji Lin*, Chuang Gan, Song Han
 # {jilin, songhan}@mit.edu, ganchuang@csail.mit.edu
-
 import torch.utils.data as data
 
 from PIL import Image
@@ -140,9 +139,6 @@ class TSNDataSet(data.Dataset):
             record_idx += 1
             
         record = self.video_list[record_idx]
-
-        if index==0:
-            index = 1
 
         indices = range(index, index+self.num_segments)
 

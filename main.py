@@ -147,7 +147,7 @@ def main():
                        train_augmentation,
                        GroupCenterPad(crop_size),
                        Stack(roll=(args.arch in ['BNInception', 'InceptionV3'])),
-                       ToTorchFormatTensor(div=(args.arch not in ['BNInception', 'InceptionV3'])),
+                       ToTorchFormatTensor(div=True),
                        normalize,
                    ]), dense_sample=args.dense_sample),
         batch_size=args.batch_size, shuffle=True,
@@ -163,7 +163,7 @@ def main():
                    transform=torchvision.transforms.Compose([
                        GroupCenterPad(crop_size),
                        Stack(roll=(args.arch in ['BNInception', 'InceptionV3'])),
-                       ToTorchFormatTensor(div=(args.arch not in ['BNInception', 'InceptionV3'])),
+                       ToTorchFormatTensor(div=True),
                        normalize,
                    ]), dense_sample=args.dense_sample),
         batch_size=args.batch_size, shuffle=False,

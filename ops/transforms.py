@@ -43,8 +43,14 @@ class GroupCenterCrop(object):
 
 
 class GroupCenterPad(object):
+    '''
+    Pad a batch of images with different sizes into size (desired_size).
+    Usage:
+        gcp = GroupCenterPad(224)
+        imgs = gcp(imgs)
+    '''
     def __init__(self, desired_size):
-        self.desired_size = desired_size
+        self.desired_size = (desired_size, desired_size) if type(desired_size) is int else desired_size
 
     def __call__(self, img_group):
         ret = []
@@ -53,7 +59,7 @@ class GroupCenterPad(object):
             w_pad = max((h - w) // 2, 0)
             h_pad = max((w - h) // 2, 0)
             img = torchvision.transforms.Pad((w_pad, h_pad))(img)
-            img = torchvision.transforms.Resize((224, 224))(img)
+            img = torchvision.transforms.Resize(self.desired_size)(img)
             ret.append(img)
         return ret
 

@@ -306,8 +306,8 @@ if args.csv_file is not None:
 
     # only output top1
     with open(args.csv_file, 'w') as f:
-        for n, pred in zip(vid_names, video_pred):
-            f.write('{};{}\n'.format(n, categories[pred]))
+        for n, label, pred in zip(vid_names, video_labels, video_pred):
+            f.write('{};{};{}\n'.format(n, categories[label], categories[pred]))
 
 
 

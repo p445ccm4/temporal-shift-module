@@ -12,7 +12,7 @@ import torchvision
 import torch.onnx
 from PIL import Image, ImageOps
 import tvm.contrib.graph_runtime as graph_runtime
-from mobilenet_v2_tsm import MobileNetV2
+from online_demo.mobilenet_v2_tsm import MobileNetV2
 
 SOFTMAX_THRES = 0
 HISTORY_LOGIT = True
@@ -77,12 +77,6 @@ def torch2executor(torch_module: torch.nn.Module, torch_inputs: Tuple[torch.Tens
 
 def get_executor(use_gpu=True):
     torch_module = MobileNetV2(n_class=2)
-    # if not os.path.exists("mobilenetv2_jester_online.pth.tar"):  # checkpoint not downloaded
-    #     print('Downloading PyTorch checkpoint...')
-    #     import urllib.request
-    #     url = 'https://hanlab18.mit.edu/projects/tsm/models/mobilenetv2_jester_online.pth.tar'
-    #     urllib.request.urlretrieve(url, './mobilenetv2_jester_online.pth.tar')
-
     model_dict = torch_module.state_dict()
     replace_dict = []
     sd = torch.load("checkpoint/TSM_bb-dataset-cropped_RGB_mobilenetv2_shift8_blockres_avg_segment8_e50/ckpt.best.pth.tar")['state_dict']
@@ -90,9 +84,15 @@ def get_executor(use_gpu=True):
         if k not in model_dict and k.replace('module.base_model.features', 'features').replace('.net', '') in model_dict:
             print('=> Load after removing module.base_model: ', k)
             replace_dict.append((k, k.replace('module.base_model.features', 'features').replace('.net', '')))
+        if k not in model_dict and k.replace('module.new_fc', 'classifier') in model_dict:
+            print('=> Load after removing module.base_model: ', k)
+            replace_dict.append((k, k.replace('module.new_fc', 'classifier')))
     for k, k_new in replace_dict:
-        if k in sd:
-            sd[k_new] = sd.pop(k)
+        sd[k_new] = sd.pop(k)
+    keys1 = set(list(sd.keys()))
+    keys2 = set(list(model_dict.keys()))
+    set_diff = (keys1 - keys2) | (keys2 - keys1)
+    print('#### Notice: keys that failed to load: {}'.format(set_diff))
     model_dict.update(sd)
     torch_module.load_state_dict(model_dict)
 
@@ -112,40 +112,6 @@ def get_executor(use_gpu=True):
     else:
         target = 'llvm -mcpu=cortex-a72 -target=armv7l-linux-gnueabihf'
     return torch2executor(torch_module, torch_inputs, target)
-
-
-def transform(frame: np.ndarray):
-    # 480, 640, 3, 0 ~ 255
-    frame = cv2.resize(frame, (224, 224))  # (224, 224, 3) 0 ~ 255
-    frame = frame / 255.0  # (224, 224, 3) 0 ~ 1.0
-    frame = np.transpose(frame, axes=[2, 0, 1])  # (3, 224, 224) 0 ~ 1.0
-    frame = np.expand_dims(frame, axis=0)  # (1, 3, 480, 640) 0 ~ 1.0
-    return frame
-
-
-class GroupScale(object):
-    """ Rescales the input PIL.Image to the given 'size'.
-    'size' will be the size of the smaller edge.
-    For example, if height > width, then image will be
-    rescaled to (size * height / width, size)
-    size: size of the smaller edge
-    interpolation: Default: PIL.Image.BILINEAR
-    """
-
-    def __init__(self, size, interpolation=Image.BILINEAR):
-        self.worker = torchvision.transforms.Resize(size, interpolation)
-
-    def __call__(self, img_group):
-        return [self.worker(img) for img in img_group]
-
-
-class GroupCenterCrop(object):
-    def __init__(self, size):
-        self.worker = torchvision.transforms.CenterCrop(size)
-
-    def __call__(self, img_group):
-        return [self.worker(img) for img in img_group]
-
 
 class Stack(object):
 
@@ -199,49 +165,41 @@ class GroupNormalize(object):
         return tensor
 
 
+class GroupCenterPad(object):
+    '''
+    Pad a batch of images with different sizes into size (desired_size).
+    Usage:
+        gcp = GroupCenterPad(224)
+        imgs = gcp(imgs)
+    '''
+    def __init__(self, desired_size=224):
+        self.desired_size = (desired_size, desired_size) if type(desired_size) is int else desired_size
+
+    def __call__(self, img_group):
+        ret = []
+        for img in img_group:
+            w, h = img.size
+            w_pad = max((h - w) // 2, 0)
+            h_pad = max((w - h) // 2, 0)
+            # img = torchvision.transforms.Pad((w_pad, h_pad))(img)
+            img = torchvision.transforms.Resize(self.desired_size)(img)
+            ret.append(img)
+        return ret
+
+
 def get_transform():
-    cropping = torchvision.transforms.Compose([
-        GroupScale(256),
-        GroupCenterCrop(224),
-    ])
     transform = torchvision.transforms.Compose([
-        cropping,
-        Stack(roll=False),
+        GroupCenterPad(224),
+        Stack(False),
         ToTorchFormatTensor(div=True),
-        GroupNormalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        GroupNormalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
     return transform
 
-
 catigories = [
-    "Doing other things",  # 0
-    "Drumming Fingers",  # 1
-    "No gesture",  # 2
-    "Pulling Hand In",  # 3
-    "Pulling Two Fingers In",  # 4
-    "Pushing Hand Away",  # 5
-    "Pushing Two Fingers Away",  # 6
-    "Rolling Hand Backward",  # 7
-    "Rolling Hand Forward",  # 8
-    "Shaking Hand",  # 9
-    "Sliding Two Fingers Down",  # 10
-    "Sliding Two Fingers Left",  # 11
-    "Sliding Two Fingers Right",  # 12
-    "Sliding Two Fingers Up",  # 13
-    "Stop Sign",  # 14
-    "Swiping Down",  # 15
-    "Swiping Left",  # 16
-    "Swiping Right",  # 17
-    "Swiping Up",  # 18
-    "Thumb Down",  # 19
-    "Thumb Up",  # 20
-    "Turning Hand Clockwise",  # 21
-    "Turning Hand Counterclockwise",  # 22
-    "Zooming In With Full Hand",  # 23
-    "Zooming In With Two Fingers",  # 24
-    "Zooming Out With Full Hand",  # 25
-    "Zooming Out With Two Fingers"  # 26
+    "Abnormal", "Normal"
 ]
+
 
 n_still_frame = 0
 
@@ -258,9 +216,9 @@ def process_output(idx_, history):
     if idx_ in [7, 8, 21, 22, 3]:
         idx_ = history[-1]
 
-    # use only single no action class
-    if idx_ == 0:
-        idx_ = 2
+    # # use only single no action class
+    # if idx_ == 0:
+    #     idx_ = 2
 
     # history smoothing
     if idx_ != history[-1]:
@@ -278,13 +236,14 @@ WINDOW_NAME = 'Video Gesture Recognition'
 
 def main():
     print("Open camera...")
-    cap = cv2.VideoCapture(0)
+    # cap = cv2.VideoCapture("online_demo/test_video/img_%03d.jpg", )
 
-    print(cap)
+    # # set a lower resolution for speed up
+    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
 
-    # set a lower resolution for speed up
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
+    video_dir = "online_demo/test_video/"
+    frame_paths = [os.path.join(video_dir, file) for file in os.listdir(video_dir)]
 
     # env variables
     full_screen = False
@@ -312,17 +271,19 @@ def main():
         tvm.nd.empty((1, 20, 7, 7), ctx=ctx)
     )
     idx = 0
-    history = [2]
+    history = [0, 0]
     history_logit = []
     history_timing = []
 
     i_frame = -1
 
     print("Ready!")
-    while True:
+    # while True:
+    for frame_path in frame_paths:
         i_frame += 1
-        _, img = cap.read()  # (480, 640, 3) 0 ~ 255
-        if i_frame % 2 == 0:  # skip every other frame to obtain a suitable frame rate
+        # _, img = cap.read()  # (480, 640, 3) 0 ~ 255
+        img = cv2.imread(frame_path)
+        if i_frame % 1 == 0:  # skip every other frame to obtain a suitable frame rate
             t1 = time.time()
             img_tran = transform([Image.fromarray(img).convert('RGB')])
             input_var = torch.autograd.Variable(img_tran.view(1, 3, img_tran.size(1), img_tran.size(2)))
@@ -359,7 +320,7 @@ def main():
 
             current_time = t2 - t1
 
-        img = cv2.resize(img, (640, 480))
+        img = cv2.resize(img, (480, 1280))
         img = img[:, ::-1]
         height, width, _ = img.shape
         label = np.zeros([height // 10, width, 3]).astype('uint8') + 255
@@ -398,7 +359,7 @@ def main():
             index += 1
             t = nt
 
-    cap.release()
+    # cap.release()
     cv2.destroyAllWindows()
 
 

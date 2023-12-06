@@ -101,7 +101,7 @@ class TSN(nn.Module):
         print('=> base model: {}'.format(base_model))
 
         if 'resnet' in base_model:
-            self.base_model = getattr(torchvision.models, base_model)(True if self.pretrain == 'imagenet' else False)
+            self.base_model = getattr(torchvision.models, base_model)(weights=torchvision.models.ResNet50_Weights.DEFAULT)
             if self.is_shift:
                 print('Adding temporal shift...')
                 from ops.temporal_shift import make_temporal_shift

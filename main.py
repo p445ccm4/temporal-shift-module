@@ -95,7 +95,7 @@ def main():
 
     if args.tune_from:
         print(("=> fine-tuning from '{}'".format(args.tune_from)))
-        sd = torch.load(args.tune_from)
+        sd = torch.load(args.tune_from)['state_dict']
         # sd = sd['state_dict']
         model_dict = model.state_dict()
         replace_dict = []

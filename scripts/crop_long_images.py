@@ -14,9 +14,8 @@ def crop_images_in_folder(folder_path, output_folder):
                 file_path = os.path.join(root, filename)
                 img = Image.open(file_path)
                 width, height = img.size
-                ratio = width / height
 
-                if ratio < 0.5:  # Checking if the ratio is greater than 1:2 (0.5)
+                if width < height * 0.6:  # Checking if the ratio is greater than 1:2 (0.5)
                     cropped_img = img.crop((0, 0, width, height // 2))  # Crop the top half of the image
                     output_file_path = os.path.join(output_subfolder, filename)
                     cropped_img.save(output_file_path)  # Save the cropped image in the output folder

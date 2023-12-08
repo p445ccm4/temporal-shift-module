@@ -72,65 +72,6 @@ class TSNDataSet(data.Dataset):
 
         print('video number:%d' % (len(self.video_list)))
 
-    def _sample_indices(self, record):
-        """
-
-        :param record: VideoRecord
-        :return: list
-        """
-        if self.dense_sample:  # i3d dense sample
-            sample_pos = max(1, 1 + record.num_frames - 64)
-            t_stride = 64 // self.num_segments
-            start_idx = 0 if sample_pos == 1 else np.random.randint(0, sample_pos - 1)
-            offsets = [(idx * t_stride + start_idx) % record.num_frames for idx in range(self.num_segments)]
-            return np.array(offsets) + 1
-        else:  # normal sample
-            average_duration = (record.num_frames - self.new_length + 1) // self.num_segments
-            if average_duration > 0:
-                offsets = np.multiply(list(range(self.num_segments)), average_duration) + randint(average_duration,
-                                                                                                  size=self.num_segments)
-            elif record.num_frames > self.num_segments:
-                offsets = np.sort(randint(record.num_frames - self.new_length + 1, size=self.num_segments))
-            else:
-                offsets = np.zeros((self.num_segments,))
-            return offsets + 1
-
-    def _get_val_indices(self, record):
-        if self.dense_sample:  # i3d dense sample
-            sample_pos = max(1, 1 + record.num_frames - 64)
-            t_stride = 64 // self.num_segments
-            start_idx = 0 if sample_pos == 1 else np.random.randint(0, sample_pos - 1)
-            offsets = [(idx * t_stride + start_idx) % record.num_frames for idx in range(self.num_segments)]
-            return np.array(offsets) + 1
-        else:
-            if record.num_frames > self.num_segments + self.new_length - 1:
-                tick = (record.num_frames - self.new_length + 1) / float(self.num_segments)
-                offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)])
-            else:
-                offsets = np.zeros((self.num_segments,))
-            return offsets + 1
-
-    def _get_test_indices(self, record):
-        if self.dense_sample:
-            sample_pos = max(1, 1 + record.num_frames - 64)
-            t_stride = 64 // self.num_segments
-            start_list = np.linspace(0, sample_pos - 1, num=10, dtype=int)
-            offsets = []
-            for start_idx in start_list.tolist():
-                offsets += [(idx * t_stride + start_idx) % record.num_frames for idx in range(self.num_segments)]
-            return np.array(offsets) + 1
-        elif self.twice_sample:
-            tick = (record.num_frames - self.new_length + 1) / float(self.num_segments)
-
-            offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)] +
-                               [int(tick * x) for x in range(self.num_segments)])
-
-            return offsets + 1
-        else:
-            tick = (record.num_frames - self.new_length + 1) / float(self.num_segments)
-            offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)])
-            return offsets + 1
-
     def __getitem__(self, index):
         record_idx = 0
 

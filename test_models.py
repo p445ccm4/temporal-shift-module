@@ -302,7 +302,7 @@ if args.csv_file is not None:
     for v in test_file_lines:
         path, n_frame, cls = v.split(' ')
         vid_names.extend([path] * (int(n_frame) - test_segments_list[0] + 1))
-    assert len(vid_names) == len(video_pred)
+    assert len(vid_names) == len(video_pred) == len(video_labels)
 
     # only output top1
     with open(args.csv_file, 'w') as f:

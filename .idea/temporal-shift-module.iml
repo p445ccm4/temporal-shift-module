@@ -13,6 +13,8 @@
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="tensorrtx" />
+    <orderEntry type="module" module-name="YOLO-TSM-2stage-detection" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

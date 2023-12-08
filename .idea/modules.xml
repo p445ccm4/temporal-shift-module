@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../YOLO-TSM-2stage-detection/.idea/YOLO-TSM-2stage-detection.iml" filepath="$PROJECT_DIR$/../YOLO-TSM-2stage-detection/.idea/YOLO-TSM-2stage-detection.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/temporal-shift-module.iml" filepath="$PROJECT_DIR$/.idea/temporal-shift-module.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../tensorrtx/.idea/tensorrtx.iml" filepath="$PROJECT_DIR$/../tensorrtx/.idea/tensorrtx.iml" />
     </modules>
   </component>
 </project>

@@ -10,6 +10,7 @@
       <excludeFolder url="file://$MODULE_DIR$/log" />
       <excludeFolder url="file://$MODULE_DIR$/online_demo/test_video" />
       <excludeFolder url="file://$MODULE_DIR$/pretrained" />
+      <excludeFolder url="file://$MODULE_DIR$/bb-dataset-cropped-upper" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -15,6 +15,6 @@ def rename_files_in_directories(root_directory):
             rename_files(root)
 
 # Provide the root directory path
-root_directory = 'bb-dataset-cropped/images'
+root_directory = 'bb-dataset-cropped-upper/images'
 
 rename_files_in_directories(root_directory)

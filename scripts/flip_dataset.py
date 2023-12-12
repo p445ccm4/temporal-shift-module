@@ -24,7 +24,7 @@ def flip_images(source_dir, destination_dir):
             cv2.imwrite(destination_file_path, flipped_image)
 
 # Example usage
-source_directory = "bb-dataset-cropped/images"
-destination_directory = "bb-dataset-cropped/images_flipped"
+source_directory = "bb-dataset-cropped-upper/images"
+destination_directory = "bb-dataset-cropped-upper/images_flipped"
 
 flip_images(source_directory, destination_directory)

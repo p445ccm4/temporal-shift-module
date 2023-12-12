@@ -15,6 +15,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="tensorrtx" />
     <orderEntry type="module" module-name="YOLO-TSM-2stage-detection" />
+    <orderEntry type="module" module-name="yolov7-TSM" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

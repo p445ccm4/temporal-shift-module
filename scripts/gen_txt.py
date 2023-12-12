@@ -24,9 +24,9 @@ def collect_directory_info(root_directory, train_file, val_file, val_portion):
                         f.write(line)
 
 # Provide the root directory and output file path
-root_directory = 'bb-dataset-cropped/images'
-train_file = 'bb-dataset-cropped/train.txt'
-val_file = 'bb-dataset-cropped/val.txt'
+root_directory = 'bb-dataset-cropped-upper/images'
+train_file = 'bb-dataset-cropped-upper/train.txt'
+val_file = 'bb-dataset-cropped-upper/val.txt'
 val_portion = 0.1
 
 collect_directory_info(root_directory, train_file, val_file, val_portion)

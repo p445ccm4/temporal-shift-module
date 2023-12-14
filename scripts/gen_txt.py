@@ -10,11 +10,15 @@ def count_files(directory):
 def collect_directory_info(root_directory, train_file, val_file, val_portion):
     for root, _, _ in os.walk(root_directory):
         if root != root_directory:  # Exclude the top-level directory
-            print(root)
-            if '_flipped' not in root: # Flipped and original video need to be put in the same mode
+            if '_flipped' not in root and '_v05' not in root and '_v15' not in root:  # Flipped and original video need to be put in the same mode
+                print(root)
                 file_count = count_files(root)
                 line = f"{root.split('/')[-1]} {file_count} {os.path.basename(root)[3]}\n"
+                line += f"{root.split('/')[-1]}_v05 {file_count} {os.path.basename(root)[3]}\n"
+                line += f"{root.split('/')[-1]}_v15 {file_count} {os.path.basename(root)[3]}\n"
                 line += f"{root.split('/')[-1]}_flipped {file_count} {os.path.basename(root)[3]}\n"
+                line += f"{root.split('/')[-1]}_flipped_v05 {file_count} {os.path.basename(root)[3]}\n"
+                line += f"{root.split('/')[-1]}_flipped_v15 {file_count} {os.path.basename(root)[3]}\n"
 
                 if random.random() > val_portion:
                     with open(train_file, 'a') as f:

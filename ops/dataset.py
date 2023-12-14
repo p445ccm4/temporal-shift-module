@@ -102,13 +102,14 @@ class TSNDataSet(data.Dataset):
         self._parse_list()
 
     def _load_image(self, directory, idx):
-        try:
+        # try:
             # return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(idx))).convert('RGB')]
             return cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
-        except Exception:
-            print('error loading image:', os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
-            # return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(1))).convert('RGB')]
-            return cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(1)))
+
+    # except Exception:
+    #     print('error loading image:', os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
+    #     # return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(1))).convert('RGB')]
+    #     return cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(1)))
 
     def _parse_list(self):
         # check the frame number is large >3:
@@ -120,6 +121,8 @@ class TSNDataSet(data.Dataset):
         print('video number:%d' % (len(self.video_list)))
 
     def __getitem__(self, index):
+        index += 1
+
         record_idx = 0
 
         while self.video_list[record_idx].num_frames-self.num_segments+1 < index:
@@ -139,6 +142,8 @@ class TSNDataSet(data.Dataset):
             p = int(seg_ind)
             for i in range(self.new_length):
                 seg_imgs = self._load_image(record.path, p)
+                if seg_imgs is None:
+                    print('error loading image:', os.path.join(self.root_path, record.path, self.image_tmpl.format(p)))
                 img = norm_brightness(seg_imgs, 225)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # RGB
                 images.append(img)

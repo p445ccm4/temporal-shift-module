@@ -1,10 +1,11 @@
-import torchvision
-import random
-from PIL import Image, ImageOps
-import numpy as np
-import numbers
 import math
+import numbers
+import random
+
+import numpy as np
 import torch
+import torchvision
+from PIL import Image, ImageOps
 
 
 class GroupRandomCrop(object):
@@ -324,17 +325,11 @@ class GroupRandomSizedCrop(object):
 
 class Stack(object):
 
-    def __init__(self, roll=False):
-        self.roll = roll
+    def __init__(self):
+        pass
 
     def __call__(self, img_group):
-        if img_group[0].mode == 'L':
-            return np.concatenate([np.expand_dims(x, 2) for x in img_group], axis=2)
-        elif img_group[0].mode == 'RGB':
-            if self.roll:
-                return np.concatenate([np.array(x)[:, :, ::-1] for x in img_group], axis=2)
-            else:
-                return np.concatenate(img_group, axis=2)
+        return np.stack([np.array(x) for x in img_group])
 
 
 class ToTorchFormatTensor(object):
@@ -347,7 +342,7 @@ class ToTorchFormatTensor(object):
     def __call__(self, pic):
         if isinstance(pic, np.ndarray):
             # handle numpy array
-            img = torch.from_numpy(pic).permute(2, 0, 1).contiguous()
+            img = torch.from_numpy(pic).permute(0, 3, 1, 2).contiguous()
         else:
             # handle PIL Image
             img = torch.ByteTensor(torch.ByteStorage.from_buffer(pic.tobytes()))

@@ -4,22 +4,22 @@
 # {jilin, songhan}@mit.edu, ganchuang@csail.mit.edu
 
 import os
-import time
 import shutil
-import torch.nn.parallel
+import time
+
 import torch.backends.cudnn as cudnn
+import torch.nn.parallel
 import torch.optim
+from tensorboardX import SummaryWriter
 from torch.nn.utils import clip_grad_norm_
 
+from ops import dataset_config
 from ops.dataset import TSNDataSet
 from ops.models import TSN
-from ops.transforms import *
-from opts import parser
-from ops import dataset_config
-from ops.utils import AverageMeter, accuracy
 from ops.temporal_shift import make_temporal_pool
-
-from tensorboardX import SummaryWriter
+from ops.transforms import *
+from ops.utils import AverageMeter, accuracy
+from opts import parser
 
 best_prec1 = 0
 
@@ -69,7 +69,7 @@ def main():
     input_mean = model.input_mean
     input_std = model.input_std
     policies = model.get_optim_policies()
-    train_augmentation = model.get_augmentation(flip=False if 'something' in args.dataset or 'jester' in args.dataset else True)
+    train_augmentation = model.get_augmentation(flip=True)
 
     model = torch.nn.DataParallel(model, device_ids=args.gpus).cuda()
 
@@ -145,10 +145,7 @@ def main():
     cudnn.benchmark = True
 
     # Data loading code
-    if args.modality != 'RGBDiff':
-        normalize = GroupNormalize(input_mean, input_std)
-    else:
-        normalize = IdentityTransform()
+    normalize = GroupNormalize(input_mean, input_std)
 
     if args.modality == 'RGB':
         data_length = 1
@@ -161,9 +158,8 @@ def main():
                    modality=args.modality,
                    image_tmpl=prefix,
                    transform=torchvision.transforms.Compose([
-                       train_augmentation,
                        GroupCenterPad(crop_size),
-                       Stack(roll=(args.arch in ['BNInception', 'InceptionV3'])),
+                       Stack(),
                        ToTorchFormatTensor(div=True),
                        normalize,
                    ]), dense_sample=args.dense_sample),
@@ -179,7 +175,7 @@ def main():
                    random_shift=False,
                    transform=torchvision.transforms.Compose([
                        GroupCenterPad(crop_size),
-                       Stack(roll=(args.arch in ['BNInception', 'InceptionV3'])),
+                       Stack(),
                        ToTorchFormatTensor(div=True),
                        normalize,
                    ]), dense_sample=args.dense_sample),
@@ -250,6 +246,7 @@ def train(train_loader, model, criterion, optimizer, epoch, log, tf_writer):
 
     end = time.time()
     for i, (input, target) in enumerate(train_loader):
+
         # measure data loading time
         data_time.update(time.time() - end)
 

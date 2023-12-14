@@ -2,13 +2,58 @@
 # arXiv:1811.08383
 # Ji Lin*, Chuang Gan, Song Han
 # {jilin, songhan}@mit.edu, ganchuang@csail.mit.edu
+
+import os
+
+import cv2
+import numpy as np
+import torch
 import torch.utils.data as data
 
-from PIL import Image
-import os
-import numpy as np
-from numpy.random import randint
 
+def norm_brightness(frame, val=125):
+    # Splitting into HSV
+    h, s, v = cv2.split(cv2.cvtColor(frame, cv2.COLOR_BGR2HSV))
+
+    # Normalizing the brightness
+    v = cv2.normalize(v, None, alpha=0, beta=val, norm_type=cv2.NORM_MINMAX)
+
+    # Conver back into HSV
+    hsv = cv2.merge((h, s, v))
+
+    # Convert into color img
+    res = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+    # Return coloured image
+    return res
+
+
+def resize_and_pad_images(image_list, desired_height, desired_width):
+    # Get the number of images
+    num_images = len(image_list)
+
+    # Create an array to store the resized and padded images
+    resized_padded_images = np.zeros((num_images, desired_height, desired_width, 3), dtype=np.uint8)
+
+    # Resize and pad each image
+    for i, image in enumerate(image_list):
+        image = image.astype(np.uint8)
+        # Resize the image to the maximum size
+        height, width, _ = image.shape
+        scale_factor_h = desired_height / height
+        scale_factor_w = desired_width / width
+        scale_factor = min(scale_factor_h, scale_factor_w)
+        resized_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
+
+        # Calculate the padding values
+        pad_height = (desired_height - resized_image.shape[0]) // 2
+        pad_width = (desired_width - resized_image.shape[1]) // 2
+
+        # Paste the resized image onto the new blank image with padding
+        resized_padded_images[i, pad_height:pad_height + resized_image.shape[0],
+        pad_width:pad_width + resized_image.shape[1]] = resized_image
+
+    return resized_padded_images
 
 class VideoRecord(object):
     def __init__(self, row):
@@ -58,10 +103,12 @@ class TSNDataSet(data.Dataset):
 
     def _load_image(self, directory, idx):
         try:
-            return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(idx))).convert('RGB')]
+            # return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(idx))).convert('RGB')]
+            return cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
         except Exception:
             print('error loading image:', os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
-            return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(1))).convert('RGB')]
+            # return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(1))).convert('RGB')]
+            return cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(1)))
 
     def _parse_list(self):
         # check the frame number is large >3:
@@ -92,11 +139,16 @@ class TSNDataSet(data.Dataset):
             p = int(seg_ind)
             for i in range(self.new_length):
                 seg_imgs = self._load_image(record.path, p)
-                images.extend(seg_imgs)
+                img = norm_brightness(seg_imgs, 225)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # RGB
+                images.append(img)
                 if p < record.num_frames:
                     p += 1
 
-        process_data = self.transform(images)
+        images = resize_and_pad_images(images, 224, 224).astype(np.float32)
+        images /= 255.0
+        images = images.transpose([0, 3, 1, 2])
+        process_data = torch.from_numpy(images)
         return process_data, record.label
 
     def __len__(self):

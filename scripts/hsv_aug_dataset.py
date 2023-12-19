@@ -40,8 +40,8 @@ def aug_images(source_dir, destination_dir, v):
 
 
 # Example usage
-source_directory = "bb-dataset-cropped-upper/new_images"
-destination_directory = "bb-dataset-cropped-upper/images_hsv_aug"
+source_directory = "bb-dataset-cropped-upper/image_aug"
+destination_directory = "bb-dataset-cropped-upper/images_hsv"
 v_gains = [0.5, 1.5]
 
 for v in v_gains:

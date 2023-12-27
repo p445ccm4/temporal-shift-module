@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import cv2
 
@@ -25,7 +26,12 @@ def flip_images(source_dir, destination_dir):
             cv2.imwrite(destination_file_path, flipped_image)
 
 # Example usage
-source_directory = "bb-dataset-cropped-upper/images_aug"
-destination_directory = "bb-dataset-cropped-upper/images_aug"
+source_directory = "bb-dataset-cropped-upper/images_new"
+destination_directory = "bb-dataset-cropped-upper/images_flipped"
 
 flip_images(source_directory, destination_directory)
+
+for file in os.listdir(source_directory):
+    shutil.move(os.path.join(source_directory, file), destination_directory)
+os.rmdir(source_directory)
+print("Done flip")

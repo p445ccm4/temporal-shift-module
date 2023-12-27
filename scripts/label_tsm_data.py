@@ -3,9 +3,11 @@ import os
 import cv2
 
 # SETTINGS
-class_id = 1  # 0=normal, 1=shaking, 2=hitting
-video_path = os.path.join('test_video/8A/8A-Cam003.mp4')
-crop_times = 0  # for the same video, make sure dont duplicate with
+class_id = 0  # 0=normal, 1=shaking, 2=hitting
+video_path = os.path.join('/media/nvidia/E8C3-FB24/VA Only Zip/C/2C-Cam002.mp4')
+crop_times = 0  # for the same video, make sure don't duplicate with
+output_folder = "images_new"
+start_time = 0  # seconds
 
 # Variables to store mouse cursor position and click coordinates
 mouse_x = 0
@@ -41,16 +43,19 @@ def mouse_event(event, x, y, flags, param):
             x_max = center_x + half_side_length
             y_min = center_y - half_side_length
             y_max = center_y + half_side_length
+
+            save_folder = os.path.join(
+                output_folder, f'cls{class_id}_vid{video_name}_ppl{crop_times}')
+            while os.path.exists(save_folder):
+                crop_times += 1
+                save_folder = os.path.join(
+                    output_folder, f'cls{class_id}_vid{video_name}_ppl{crop_times}')
+            os.makedirs(save_folder)
+
             for i in range(max(0, len(past_frames) - 8), len(past_frames)):
                 image = past_frames[i]
                 cropped_image = image[y_min:y_max, x_min:x_max]
-                save_folder = os.path.join(
-                    'bb-dataset-cropped-upper', f'cls{class_id}_vid{video_name}_ppl{crop_times}')
-                while os.path.exists(save_folder):
-                    crop_times += 1
-                    save_folder = os.path.join(
-                        'bb-dataset-cropped-upper', f'cls{class_id}_vid{video_name}_ppl{crop_times}')
-                os.makedirs(save_folder, exist_ok=True)
+
                 save_path = os.path.join(save_folder, f'img_{i + 1:03}.jpg')
                 if cv2.imwrite(save_path, cropped_image):
                     print(f'Image saved to {save_path}')
@@ -68,6 +73,9 @@ def mouse_event(event, x, y, flags, param):
 # Read the video file
 cap = cv2.VideoCapture(video_path)
 
+# starts from particular frame
+cap.set(cv2.CAP_PROP_POS_FRAMES, start_time * 25)
+
 # Check if video file was opened successfully
 if not cap.isOpened():
     print("Error opening video file")
@@ -81,12 +89,12 @@ cv2.setMouseCallback('Video', mouse_event)
 # List to store past frames
 past_frames = []
 
-while cap.isOpened():
+while True:
     # Read the current frame
     ret, frame = cap.read()
-    img = frame.copy()
 
     if ret:
+        img = frame.copy()
         # Draw lines representing the mouse cursor
         # Horizontal line
         cv2.line(frame, (0, mouse_y),

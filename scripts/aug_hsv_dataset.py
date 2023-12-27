@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import cv2
 import numpy as np
@@ -40,9 +41,14 @@ def aug_images(source_dir, destination_dir, v):
 
 
 # Example usage
-source_directory = "bb-dataset-cropped-upper/image_aug"
+source_directory = "bb-dataset-cropped-upper/images_flipped"
 destination_directory = "bb-dataset-cropped-upper/images_hsv"
 v_gains = [0.5, 1.5]
 
 for v in v_gains:
     aug_images(source_directory, destination_directory, v)
+
+for file in os.listdir(source_directory):
+    shutil.move(os.path.join(source_directory, file), destination_directory)
+os.rmdir(source_directory)
+print("Done hsv")

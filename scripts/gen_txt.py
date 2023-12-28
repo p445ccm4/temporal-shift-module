@@ -2,6 +2,8 @@ import os
 import random
 import shutil
 
+from tqdm import tqdm
+
 
 def count_files(directory):
     file_count = 0
@@ -11,7 +13,7 @@ def count_files(directory):
 
 
 def collect_directory_info(root_directory, train_file, val_file, val_portion):
-    for root, _, _ in os.walk(root_directory):
+    for root, _, _ in tqdm(os.walk(root_directory), desc='gen txt'):
         if root != root_directory:  # Exclude the top-level directory
             if '_flipped' not in root and '_v05' not in root and '_v15' not in root:  # Flipped and original video need to be put in the same mode
                 # print(root)

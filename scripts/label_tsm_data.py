@@ -3,10 +3,10 @@ import os
 import cv2
 
 # SETTINGS
-class_id = 0  # 0=normal, 1=shaking, 2=hitting
-video_path = os.path.join('/media/nvidia/E8C3-FB24/VA Only Zip/C/2C-Cam002.mp4')
+class_id = 1  # 0=normal, 1=shaking, 2=hitting
+video_path = os.path.join('/media/nvidia/E8C3-FB24/VA Only Zip/C/4C-Cam003.mp4')
 crop_times = 0  # for the same video, make sure don't duplicate with
-output_folder = "images_new"
+output_folder = "bb-dataset-cropped-upper/images_new"
 start_time = 0  # seconds
 
 # Variables to store mouse cursor position and click coordinates
@@ -89,38 +89,46 @@ cv2.setMouseCallback('Video', mouse_event)
 # List to store past frames
 past_frames = []
 
+# Read the current frame
+ret, frame = cap.read()
+if ret:
+    img = frame.copy()
+    # Store the current frame in the past frames list
+    past_frames.append(img)
+else:
+    exit(1)
+
 while True:
-    # Read the current frame
-    ret, frame = cap.read()
+    # Draw lines representing the mouse cursor
+    # Horizontal line
+    cv2.line(frame, (0, mouse_y),
+             (frame.shape[1], mouse_y), (0, 255, 0), 1)
+    # Vertical line
+    cv2.line(frame, (mouse_x, 0),
+             (mouse_x, frame.shape[0]), (0, 255, 0), 1)
 
-    if ret:
-        img = frame.copy()
-        # Draw lines representing the mouse cursor
-        # Horizontal line
-        cv2.line(frame, (0, mouse_y),
-                 (frame.shape[1], mouse_y), (0, 255, 0), 1)
-        # Vertical line
-        cv2.line(frame, (mouse_x, 0),
-                 (mouse_x, frame.shape[0]), (0, 255, 0), 1)
+    # Display the frame
+    cv2.imshow('Video', frame)
 
-        # Display the frame
-        cv2.imshow('Video', frame)
-
-        # Store the current frame in the past frames list
-        past_frames.append(img)
-
-        # Pop frames if there are more than 4 frames in the past_frames list
-        if len(past_frames) > 8:
-            past_frames.pop(0)
-
-        # Check for 'q' key press to exit or 'n' key press to go to the next frame
-        key = cv2.waitKey(0) & 0xFF
-        if key == ord('q'):
-            break
-        elif key == ord('n'):
-            continue
-    else:
+    # Check for 'q' key press to exit or 'n' key press to go to the next frame
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord('q'):
         break
+    elif key == ord('n'):
+        # Read the current frame
+        ret, frame = cap.read()
+        if ret:
+            img = frame.copy()
+
+            # Store the current frame in the past frames list
+            past_frames.append(img)
+
+            # Pop frames if there are more than 4 frames in the past_frames list
+            if len(past_frames) > 8:
+                past_frames.pop(0)
+        else:
+            break
+    frame = img.copy()
 
 # Release the video capture object and close the windows
 cap.release()

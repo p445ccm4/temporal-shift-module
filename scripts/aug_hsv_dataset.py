@@ -3,6 +3,7 @@ import shutil
 
 import cv2
 import numpy as np
+from tqdm import tqdm
 
 
 def hsv_augmentation(image, value_scale=1):
@@ -19,7 +20,7 @@ def hsv_augmentation(image, value_scale=1):
 
 
 def aug_images(source_dir, destination_dir, v):
-    for root, dirs, files in os.walk(source_dir):
+    for root, dirs, files in tqdm(os.walk(source_dir), desc='hsv augmentation'):
         for file in files:
             # Get the path of the current file
             source_path = os.path.join(root, file)

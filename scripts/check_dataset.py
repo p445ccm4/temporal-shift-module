@@ -3,41 +3,69 @@ import os
 import cv2
 from tqdm import tqdm
 
+from recover_dir import recover_dir
+
 # Define the root folder
 root_folder = "bb-dataset-cropped-upper/images"
 
+org_list = [f for f in os.listdir(root_folder) if
+            not f.endswith('_v05') and not f.endswith('_v15') and not f.endswith('_flipped')]
+suffices = ['', '_flipped', '_v05', '_v15', '_flipped_v05', '_flipped_v15']
+
 # Iterate over the folders in the root folder
-for folder in tqdm(os.listdir(root_folder), desc='checking dataset'):
+for folder in tqdm(org_list, desc='checking dataset'):
     # Define the folder path
     folder_path = os.path.join(root_folder, folder)
 
-    list_folders = os.listdir(folder_path)
+    for suffix in suffices:
+        abs_folder_path_with_suffix = folder_path + suffix
+        rel_folder_path_with_suffix = folder + suffix
 
-    # Check if the folder is empty
-    if len(list_folders) == 0:
-        print(f"Folder {folder} is empty.")
-        continue
+        if not os.path.exists(abs_folder_path_with_suffix):
+            print(f"Folder {rel_folder_path_with_suffix} is not exist.")
+            os.mkdir(abs_folder_path_with_suffix)
+            recover_dir(rel_folder_path_with_suffix)
 
-    # Get the size of the first image in the folder
-    image_path = os.path.join(folder_path, list_folders[0])
-    image = cv2.imread(image_path)
-    image_size = image.shape
+        list_folders = os.listdir(abs_folder_path_with_suffix)
 
-    # Iterate over the other images in the folder
-    for filename in list_folders:
-        # Define the image path
-        image_path = os.path.join(folder_path, filename)
+        # Check if the folder is empty
+        if len(list_folders) == 0:
+            print(f"Folder {rel_folder_path_with_suffix} is empty.")
+            recover_dir(rel_folder_path_with_suffix)
+            list_folders = os.listdir(abs_folder_path_with_suffix)
 
-        # Check if the image is corrupted
-        try:
-            image = cv2.imread(image_path)
-        except cv2.error:
-            print(f"Image {filename} in folder {folder} is corrupted.")
-            continue
+        # Get the size of the first image in the folder
+        image_path = os.path.join(abs_folder_path_with_suffix, list_folders[0])
+        image = cv2.imread(image_path)
+        image_size = image.shape
 
-        # Check if the image has the same size as the first image
-        if image.shape != image_size:
-            print(f"Image {filename} in folder {folder} has a different size.")
+        # Iterate over the other images in the folder
+        for filename in list_folders:
+            # Define the image path
+            image_path = os.path.join(abs_folder_path_with_suffix, filename)
+
+            # Check if the image is corrupted
+            try:
+                image = cv2.imread(image_path)
+            except Exception as e:
+                print(e)
+                print(f"Image {filename} in folder {rel_folder_path_with_suffix} is corrupted.")
+                recover_dir(rel_folder_path_with_suffix)
+                image = cv2.imread(image_path)
+
+            if image is None:
+                print(f"Image {filename} in folder {rel_folder_path_with_suffix} is corrupted.")
+                recover_dir(rel_folder_path_with_suffix)
+                image = cv2.imread(image_path)
+
+            try:
+                # Check if the image has the same size as the first image
+                if image.shape != image_size:
+                    print(f"Image {filename} in folder {rel_folder_path_with_suffix} has a different size.")
+                    recover_dir(rel_folder_path_with_suffix)
+            except Exception as e:
+                print(e)
+                print(rel_folder_path_with_suffix)
 
 # Print a message to indicate that the check is complete
 print("Check complete.")

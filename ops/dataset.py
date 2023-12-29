@@ -10,6 +10,8 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
+from scripts.recover_dir import recover_dir
+
 
 def norm_brightness(frame, val=125):
     # Splitting into HSV
@@ -102,14 +104,20 @@ class TSNDataSet(data.Dataset):
         self._parse_list()
 
     def _load_image(self, directory, idx):
-        # try:
-            # return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(idx))).convert('RGB')]
-            return cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
+        try:
+            image = cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
+            if image is None:
+                recover_dir(directory)
+                image = cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
 
-    # except Exception:
-    #     print('error loading image:', os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
-    #     # return [Image.open(os.path.join(self.root_path, directory, self.image_tmpl.format(1))).convert('RGB')]
-    #     return cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(1)))
+        except Exception:
+            print('error loading image in _load_image:',
+                  os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
+            print(directory)
+            recover_dir(directory)
+            image = cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
+        finally:
+            return image
 
     def _parse_list(self):
         # check the frame number is large >3:
@@ -143,7 +151,8 @@ class TSNDataSet(data.Dataset):
             for i in range(self.new_length):
                 seg_imgs = self._load_image(record.path, p)
                 if seg_imgs is None:
-                    print('error loading image:', os.path.join(self.root_path, record.path, self.image_tmpl.format(p)))
+                    print('error loading image in get():',
+                          os.path.join(self.root_path, record.path, self.image_tmpl.format(p)))
                 img = norm_brightness(seg_imgs, 225)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # RGB
                 images.append(img)

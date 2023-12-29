@@ -2,8 +2,5 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../YOLO-TSM-2stage-detection" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../tensorrtx" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/../yolov7-TSM-1stage" vcs="Git" />
   </component>
 </project>

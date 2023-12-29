@@ -13,4 +13,4 @@ python3 scripts/check_dataset.py
 # can skip this script if all data comes from step 2.
 # python3 scripts/reorder_frames.py
 
-echo 'finish dataset augmentation'
+echo 'finish dataset augmentation and checking'

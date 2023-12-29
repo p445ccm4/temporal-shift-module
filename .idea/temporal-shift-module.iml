@@ -12,9 +12,8 @@
       <excludeFolder url="file://$MODULE_DIR$/pretrained" />
       <excludeFolder url="file://$MODULE_DIR$/bb-dataset-cropped-upper" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="YOLO-TSM-2stage-detection" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

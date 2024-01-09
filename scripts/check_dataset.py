@@ -1,8 +1,6 @@
 import os
-
 import cv2
-from tqdm import tqdm
-
+from tqdm.contrib.concurrent import process_map
 from recover_dir import recover_dir
 
 # Define the root folder
@@ -12,8 +10,9 @@ org_list = [f for f in os.listdir(root_folder) if
             not f.endswith('_v05') and not f.endswith('_v15') and not f.endswith('_flipped')]
 suffices = ['', '_flipped', '_v05', '_v15', '_flipped_v05', '_flipped_v15']
 
-# Iterate over the folders in the root folder
-for folder in tqdm(org_list, desc='checking dataset'):
+
+# Define a function to check a single folder
+def check_folder(folder):
     # Define the folder path
     folder_path = os.path.join(root_folder, folder)
 
@@ -63,9 +62,19 @@ for folder in tqdm(org_list, desc='checking dataset'):
                 if image.shape != image_size:
                     print(f"Image {filename} in folder {rel_folder_path_with_suffix} has a different size.")
                     recover_dir(rel_folder_path_with_suffix)
+
+                    # Get the size of the first image in the folder
+                    first_image_path = os.path.join(abs_folder_path_with_suffix, list_folders[0])
+                    first_image = cv2.imread(first_image_path)
+                    image_size = first_image.shape
+
             except Exception as e:
                 print(e)
                 print(rel_folder_path_with_suffix)
+
+
+# Map the check_folder function to each folder in the root folder
+process_map(check_folder, org_list)
 
 # Print a message to indicate that the check is complete
 print("Check complete.")

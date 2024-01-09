@@ -4,10 +4,10 @@ import cv2
 
 # SETTINGS
 class_id = 1  # 0=normal, 1=shaking, 2=hitting
-video_path = os.path.join('/media/nvidia/E8C3-FB24/VA Only Zip/C/4C-Cam003.mp4')
+video_path = os.path.join('/media/nvidia/E8C3-FB24/VA Only Zip/C/5C-Cam002.mp4')
 crop_times = 0  # for the same video, make sure don't duplicate with
 output_folder = "bb-dataset-cropped-upper/images_new"
-start_time = 0  # seconds
+start_time = 100  # seconds
 
 # Variables to store mouse cursor position and click coordinates
 mouse_x = 0
@@ -128,6 +128,15 @@ while True:
                 past_frames.pop(0)
         else:
             break
+    elif key == ord('0'):
+        class_id = 0
+        print(f'Annotating class {class_id} (Normal)')
+    elif key == ord('1'):
+        class_id = 1
+        print(f'Annotating class {class_id} (Shaking)')
+    elif key == ord('2'):
+        class_id = 2
+        print(f'Annotating class {class_id} (Hitting)')
     frame = img.copy()
 
 # Release the video capture object and close the windows

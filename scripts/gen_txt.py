@@ -6,31 +6,35 @@ from tqdm import tqdm
 
 
 def count_files(directory):
-    file_count = 0
-    for _, _, files in os.walk(directory):
-        file_count += len(files)
-    return file_count
+    return len(os.listdir(directory))
 
 
 def collect_directory_info(root_directory, train_file, val_file, val_portion):
-    for root, _, _ in tqdm(os.walk(root_directory), desc='gen txt'):
-        if root != root_directory:  # Exclude the top-level directory
-            if '_flipped' not in root and '_v05' not in root and '_v15' not in root:  # Flipped and original video need to be put in the same mode
+    train = open(train_file, 'a')
+    val = open(val_file, 'a')
+    for subdir in tqdm(os.listdir(root_directory), desc='gen txt'):
+        subdir = os.path.join(root_directory, subdir)
+        if os.path.isdir(subdir):
+            if '_flipped' not in subdir and '_v05' not in subdir and '_v15' not in subdir:  # Flipped and original video need to be put in the same mode
                 # print(root)
-                file_count = count_files(root)
-                line = f"{root.split('/')[-1]} {file_count} {os.path.basename(root)[3]}\n"
-                line += f"{root.split('/')[-1]}_v05 {file_count} {os.path.basename(root)[3]}\n"
-                line += f"{root.split('/')[-1]}_v15 {file_count} {os.path.basename(root)[3]}\n"
-                line += f"{root.split('/')[-1]}_flipped {file_count} {os.path.basename(root)[3]}\n"
-                line += f"{root.split('/')[-1]}_flipped_v05 {file_count} {os.path.basename(root)[3]}\n"
-                line += f"{root.split('/')[-1]}_flipped_v15 {file_count} {os.path.basename(root)[3]}\n"
+                file_count = count_files(subdir)
+                line = f"{subdir.split('/')[-1]} {file_count} {os.path.basename(subdir)[3]}\n"
+                line += f"{subdir.split('/')[-1]}_v05 {file_count} {os.path.basename(subdir)[3]}\n"
+                line += f"{subdir.split('/')[-1]}_v15 {file_count} {os.path.basename(subdir)[3]}\n"
+                line += f"{subdir.split('/')[-1]}_flipped {file_count} {os.path.basename(subdir)[3]}\n"
+                line += f"{subdir.split('/')[-1]}_flipped_v05 {file_count} {os.path.basename(subdir)[3]}\n"
+                line += f"{subdir.split('/')[-1]}_flipped_v15 {file_count} {os.path.basename(subdir)[3]}\n"
 
                 if random.random() > val_portion:
-                    with open(train_file, 'a') as f:
-                        f.write(line)
+                    # with open(train_file, 'a') as train:
+                    train.write(line)
+                    train.flush()
                 else:
-                    with open(val_file, 'a') as f:
-                        f.write(line)
+                    # with open(val_file, 'a') as val:
+                    val.write(line)
+                    val.flush()
+    train.close()
+    val.close()
 
 
 # Provide the root directory and output file path

@@ -1,4 +1,4 @@
-cd /media/nvidia/6561-3431/temporal-shift-module
+cd '/media/nvidia/New/temporal-shift-module'
 
 # make sure the dataset directory is correct before running each script
 # left-right flipping
@@ -14,3 +14,5 @@ python3 scripts/check_dataset.py
 # python3 scripts/reorder_frames.py
 
 echo 'finish dataset augmentation and checking'
+
+bash scripts/train_tsm_bb_upper.sh

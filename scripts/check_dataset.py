@@ -8,7 +8,7 @@ root_folder = "bb-dataset-cropped-upper/images"
 
 org_list = [f for f in os.listdir(root_folder) if
             not f.endswith('_v05') and not f.endswith('_v15') and not f.endswith('_flipped')]
-suffices = ['', '_flipped', '_v05', '_v15', '_flipped_v05', '_flipped_v15']
+suffices = ['', '_v05', '_v15']
 
 
 # Define a function to check a single folder

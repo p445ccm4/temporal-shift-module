@@ -39,17 +39,19 @@ def aug_images(source_dir, destination_dir, v):
             # Save the flipped image to the destination folder
             destination_file_path = os.path.join(destination_dir_path, file)
             cv2.imwrite(destination_file_path, flipped_image)
+def main():
+    # Example usage
+    source_directory = "bb-dataset-cropped-upper/images_new"
+    destination_directory = "bb-dataset-cropped-upper/images_hsv"
+    v_gains = [0.5, 1.5]
 
+    for v in v_gains:
+        aug_images(source_directory, destination_directory, v)
 
-# Example usage
-source_directory = "bb-dataset-cropped-upper/images_flipped"
-destination_directory = "bb-dataset-cropped-upper/images_hsv"
-v_gains = [0.5, 1.5]
+    for file in os.listdir(source_directory):
+        shutil.move(os.path.join(source_directory, file), destination_directory)
+    os.rmdir(source_directory)
+    print("Done hsv")
 
-for v in v_gains:
-    aug_images(source_directory, destination_directory, v)
-
-for file in os.listdir(source_directory):
-    shutil.move(os.path.join(source_directory, file), destination_directory)
-os.rmdir(source_directory)
-print("Done hsv")
+if __name__ == '__main__':
+    main()

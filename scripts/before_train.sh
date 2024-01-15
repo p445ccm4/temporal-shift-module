@@ -1,8 +1,6 @@
 cd '/media/nvidia/New/temporal-shift-module'
 
 # make sure the dataset directory is correct before running each script
-# left-right flipping
-python3 scripts/aug_flip_dataset.py
 # hsv augmentation
 python3 scripts/aug_hsv_dataset.py
 # generate train.txt and val.txt

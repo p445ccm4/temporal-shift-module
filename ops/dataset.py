@@ -144,6 +144,7 @@ class TSNDataSet(data.Dataset):
         return self.get(record, indices)
 
     def get(self, record, indices):
+        is_flip = np.random.random() >= 0.5
 
         images = list()
         for seg_ind in indices:
@@ -155,6 +156,8 @@ class TSNDataSet(data.Dataset):
                           os.path.join(self.root_path, record.path, self.image_tmpl.format(p)))
                 img = norm_brightness(seg_imgs, 225)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # RGB
+                if is_flip:
+                    img = cv2.flip(img, 1)
                 images.append(img)
                 if p < record.num_frames:
                     p += 1

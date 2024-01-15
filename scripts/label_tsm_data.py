@@ -3,11 +3,11 @@ import os
 import cv2
 
 # SETTINGS
-class_id = 1  # 0=normal, 1=shaking, 2=hitting
-video_path = os.path.join('/media/nvidia/E8C3-FB24/VA Only Zip/C/5C-Cam002.mp4')
+class_id = 0  # 0=normal, 1=shaking, 2=hitting
+video_path = os.path.join('/media/nvidia/E8C3-FB24/VA_Only_Zip/B/1B-Cam003.mp4')
 crop_times = 0  # for the same video, make sure don't duplicate with
 output_folder = "bb-dataset-cropped-upper/images_new"
-start_time = 100  # seconds
+start_time = 0  # seconds
 
 # Variables to store mouse cursor position and click coordinates
 mouse_x = 0
@@ -16,11 +16,14 @@ click_coordinates = []
 
 # Extract the filename
 video_name = os.path.basename(video_path).split('.')[0]
+# Create output folder
+os.makedirs(output_folder, exist_ok=True)
 
 
 # Mouse event handler
 def mouse_event(event, x, y, flags, param):
     global crop_times
+    global class_id
 
     if event == cv2.EVENT_LBUTTONUP:
         click_coordinates.append((x, y))
@@ -39,10 +42,10 @@ def mouse_event(event, x, y, flags, param):
 
             side_length = max(width, height)
             half_side_length = side_length // 2
-            x_min = center_x - half_side_length
-            x_max = center_x + half_side_length
-            y_min = center_y - half_side_length
-            y_max = center_y + half_side_length
+            x_min = max(center_x - half_side_length, 0)
+            x_max = min(center_x + half_side_length, 1920)
+            y_min = max(center_y - half_side_length, 0)
+            y_max = min(center_y + half_side_length, 1080)
 
             save_folder = os.path.join(
                 output_folder, f'cls{class_id}_vid{video_name}_ppl{crop_times}')
@@ -52,7 +55,7 @@ def mouse_event(event, x, y, flags, param):
                     output_folder, f'cls{class_id}_vid{video_name}_ppl{crop_times}')
             os.makedirs(save_folder)
 
-            for i in range(max(0, len(past_frames) - 8), len(past_frames)):
+            for i in range(len(past_frames)):
                 image = past_frames[i]
                 cropped_image = image[y_min:y_max, x_min:x_max]
 
@@ -99,13 +102,37 @@ else:
     exit(1)
 
 while True:
+    # Draw status text
+    if class_id == 0:
+        class_label = "normal"
+        color = (0, 255, 0)
+    elif class_id == 1:
+        class_label = "shaking"
+        color = (0, 0, 255)
+    elif class_id == 2:
+        class_label = "hitting"
+        color = (0, 0, 255)
+    # green light
+    cv2.putText(
+        frame,
+        class_label,
+        (100, 80),
+        0,
+        2,
+        color,
+        thickness=3,
+        lineType=cv2.LINE_AA,
+    )
     # Draw lines representing the mouse cursor
-    # Horizontal line
-    cv2.line(frame, (0, mouse_y),
-             (frame.shape[1], mouse_y), (0, 255, 0), 1)
-    # Vertical line
-    cv2.line(frame, (mouse_x, 0),
-             (mouse_x, frame.shape[0]), (0, 255, 0), 1)
+    if len(click_coordinates) == 1:
+        cv2.rectangle(frame, click_coordinates[0], (mouse_x, mouse_y), (0, 255, 0), 1)
+    else:
+        # Horizontal line
+        cv2.line(frame, (0, mouse_y),
+                 (frame.shape[1], mouse_y), (0, 255, 0), 1)
+        # Vertical line
+        cv2.line(frame, (mouse_x, 0),
+                 (mouse_x, frame.shape[0]), (0, 255, 0), 1)
 
     # Display the frame
     cv2.imshow('Video', frame)
@@ -114,7 +141,7 @@ while True:
     key = cv2.waitKey(1) & 0xFF
     if key == ord('q'):
         break
-    elif key == ord('n'):
+    elif key == ord(' '):
         # Read the current frame
         ret, frame = cap.read()
         if ret:

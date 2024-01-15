@@ -21,9 +21,9 @@ def collect_directory_info(root_directory, train_file, val_file, val_portion):
                 line = f"{subdir.split('/')[-1]} {file_count} {os.path.basename(subdir)[3]}\n"
                 line += f"{subdir.split('/')[-1]}_v05 {file_count} {os.path.basename(subdir)[3]}\n"
                 line += f"{subdir.split('/')[-1]}_v15 {file_count} {os.path.basename(subdir)[3]}\n"
-                line += f"{subdir.split('/')[-1]}_flipped {file_count} {os.path.basename(subdir)[3]}\n"
-                line += f"{subdir.split('/')[-1]}_flipped_v05 {file_count} {os.path.basename(subdir)[3]}\n"
-                line += f"{subdir.split('/')[-1]}_flipped_v15 {file_count} {os.path.basename(subdir)[3]}\n"
+                # line += f"{subdir.split('/')[-1]}_flipped {file_count} {os.path.basename(subdir)[3]}\n"
+                # line += f"{subdir.split('/')[-1]}_flipped_v05 {file_count} {os.path.basename(subdir)[3]}\n"
+                # line += f"{subdir.split('/')[-1]}_flipped_v15 {file_count} {os.path.basename(subdir)[3]}\n"
 
                 if random.random() > val_portion:
                     # with open(train_file, 'a') as train:

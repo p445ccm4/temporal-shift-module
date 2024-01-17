@@ -121,14 +121,14 @@ class TSNDataSet(data.Dataset):
         try:
             image = cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
             if image is None:
-                recover_dir(directory)
+                # recover_dir(directory)
                 image = cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
 
         except Exception:
             print('error loading image in _load_image:',
                   os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
             print(directory)
-            recover_dir(directory)
+            # recover_dir(directory)
             image = cv2.imread(os.path.join(self.root_path, directory, self.image_tmpl.format(idx)))
         finally:
             return image
@@ -178,9 +178,6 @@ class TSNDataSet(data.Dataset):
                     img = cv2.flip(img, 1)
                 # Colorspace Augment
                 augment_hsv(img, r)  # output: RGB
-
-                cv2.imshow(record.path, img)
-                cv2.waitKey(0)
 
                 images.append(img)
                 if p < record.num_frames:

@@ -20,7 +20,7 @@ def norm_brightness(frame, val=125):
     # Normalizing the brightness
     v = cv2.normalize(v, None, alpha=0, beta=val, norm_type=cv2.NORM_MINMAX)
 
-    # Conver back into HSV
+    # Convert back into HSV
     hsv = cv2.merge((h, s, v))
 
     # Convert into color img
@@ -56,6 +56,20 @@ def resize_and_pad_images(image_list, desired_height, desired_width):
         pad_width:pad_width + resized_image.shape[1]] = resized_image
 
     return resized_padded_images
+
+
+def augment_hsv(img, r):
+    hue, sat, val = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
+    dtype = img.dtype  # uint8
+
+    x = np.arange(0, 256, dtype=np.int16)
+    lut_hue = ((x * r[0]) % 180).astype(dtype)
+    lut_sat = np.clip(x * r[1], 0, 255).astype(dtype)
+    lut_val = np.clip(x * r[2], 0, 255).astype(dtype)
+
+    img_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val))).astype(dtype)
+    cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB, dst=img)  # no return needed
+
 
 class VideoRecord(object):
     def __init__(self, row):
@@ -121,7 +135,8 @@ class TSNDataSet(data.Dataset):
 
     def _parse_list(self):
         # check the frame number is large >3:
-        tmp = [x.strip().split(' ') for x in open(self.list_file)] # [[path, n_frame, label], [path, n_frame, label], ...]
+        tmp = [x.strip().split(' ') for x in
+               open(self.list_file)]  # [[path, n_frame, label], [path, n_frame, label], ...]
         if not self.test_mode or self.remove_missing:
             tmp = [item for item in tmp if int(item[1]) >= self.num_segments]
         self.video_list = [VideoRecord(item) for item in tmp]
@@ -133,31 +148,40 @@ class TSNDataSet(data.Dataset):
 
         record_idx = 0
 
-        while self.video_list[record_idx].num_frames-self.num_segments+1 < index:
-            index -= self.video_list[record_idx].num_frames-self.num_segments+1
+        while self.video_list[record_idx].num_frames - self.num_segments + 1 < index:
+            index -= self.video_list[record_idx].num_frames - self.num_segments + 1
             record_idx += 1
-            
+
         record = self.video_list[record_idx]
 
-        indices = range(index, index+self.num_segments)
+        indices = range(index, index + self.num_segments)
 
         return self.get(record, indices)
 
     def get(self, record, indices):
         is_flip = np.random.random() >= 0.5
+        r = np.random.uniform(-1, 1, 3) * [0.015, 0.7, 0.4] + 1  # random gains
 
         images = list()
         for seg_ind in indices:
             p = int(seg_ind)
             for i in range(self.new_length):
-                seg_imgs = self._load_image(record.path, p)
+                seg_imgs = self._load_image(record.path, p)  # output: BGR
                 if seg_imgs is None:
                     print('error loading image in get():',
                           os.path.join(self.root_path, record.path, self.image_tmpl.format(p)))
-                img = norm_brightness(seg_imgs, 225)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # RGB
+                img = norm_brightness(seg_imgs, 225)  # output: BGR
+                # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # RGB
+
+                # Flip Augment
                 if is_flip:
                     img = cv2.flip(img, 1)
+                # Colorspace Augment
+                augment_hsv(img, r)  # output: RGB
+
+                cv2.imshow(record.path, img)
+                cv2.waitKey(0)
+
                 images.append(img)
                 if p < record.num_frames:
                     p += 1

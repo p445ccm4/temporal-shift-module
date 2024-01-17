@@ -1,4 +1,4 @@
-cd '/media/nvidia/New/temporal-shift-module'
+cd '/media/nvidia/6561-3431/temporal-shift-module'
 
 python3 main.py bb-dataset-cropped-upper RGB \
      --arch resnet50 --num_segments 8 \

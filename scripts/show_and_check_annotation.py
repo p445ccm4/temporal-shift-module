@@ -1,22 +1,23 @@
 import shutil
-
 import cv2
 import os
-
 from tqdm import tqdm
 
+
 # Current working directory
-cwd = 'bb-dataset-cropped-upper/images'
-# Label (0=Normal, 1=Shaking, 2=Hitting)
-label = 1
+cwd = 'datasets_tsm/yanchai_12072024/images'
+# Label (0=Normal, 1=Slap Head, 2=Slap Body, 3=Shake)
+label = 3
 
 
 def rename_dir(old_dir, new_dir):
     while os.path.exists(new_dir):
-        prefix, ppl = new_dir.rsplit('ppl', maxsplit=1)
-        new_dir = prefix + 'ppl' + str(int(ppl) + 1)
+        vid_frame, ppl_cls = new_dir.rsplit('_ppl', maxsplit=1)
+        ppl, cls = ppl_cls.rsplit('_cls', maxsplit=1)
+        new_dir = vid_frame + '_ppl' + str(int(ppl)+1) + '_cls' + cls
 
-    suffices = ["", "_v05", "_v15"]
+    # suffices = ["", "_v05", "_v15"]
+    suffices = [""]
 
     for suffix in suffices:
         os.makedirs(new_dir + suffix)
@@ -29,7 +30,7 @@ def rename_dir(old_dir, new_dir):
         print(f'{old_dir + suffix} -> {new_dir + suffix}')
 
 
-folder_list = sorted([folder for folder in os.listdir(cwd) if not folder.endswith('_v05') and not folder.endswith('_v15') and folder[3] == str(label)])
+folder_list = sorted([folder for folder in os.listdir(cwd) if not folder.endswith('_v05') and not folder.endswith('_v15') and folder[-1] == str(label)])
 # Loop through each folder in the current working directory
 for folder in tqdm(folder_list, desc="Check annotations"):
     folder_path = os.path.join(cwd, folder)
@@ -49,7 +50,7 @@ for folder in tqdm(folder_list, desc="Check annotations"):
                     image = cv2.imread(image_path)
 
                     # Display the image using OpenCV
-                    cv2.imshow(f'{folder}: Class {folder[3]}', image)
+                    cv2.imshow(f'{folder}: Class {folder[-1]}', image)
                     cv2.waitKey(1000 // 20)
 
             key = cv2.waitKey(0)
@@ -58,16 +59,24 @@ for folder in tqdm(folder_list, desc="Check annotations"):
             elif key == ord('r'):  # replay
                 continue
             elif key == ord('0'):
-                new_name = os.path.join(cwd, folder[:3] + '0' + folder[4:])
+                new_name = os.path.join(cwd, folder[:-1] + '0')
                 rename_dir(folder_path, new_name)
                 break
             elif key == ord('1'):
-                new_name = os.path.join(cwd, folder[:3] + '1' + folder[4:])
+                new_name = os.path.join(cwd, folder[:-1] + '1')
                 rename_dir(folder_path, new_name)
                 break
             elif key == ord('2'):
-                new_name = os.path.join(cwd, folder[:3] + '2' + folder[4:])
+                new_name = os.path.join(cwd, folder[:-1] + '2')
                 rename_dir(folder_path, new_name)
+                break
+            elif key == ord('3'):
+                new_name = os.path.join(cwd, folder[:-1] + '3')
+                rename_dir(folder_path, new_name)
+                break
+            elif key == 255:  # delete
+                print("removed " + folder_path)
+                shutil.rmtree(folder_path)
                 break
             elif key == ord('q'):
                 exit(0)

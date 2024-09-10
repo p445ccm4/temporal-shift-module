@@ -234,7 +234,7 @@ def train(train_loader, model, criterion, optimizer, epoch, log, tf_writer):
     data_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
-    top5 = AverageMeter()
+    top2 = AverageMeter()
 
     if args.no_partialbn:
         model.module.partialBN(False)
@@ -259,10 +259,10 @@ def train(train_loader, model, criterion, optimizer, epoch, log, tf_writer):
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
-        prec1, prec5 = accuracy(output.data, target, topk=(1, 2))
+        prec1, prec2 = accuracy(output.data, target, topk=(1, 2))
         losses.update(loss.item(), input.size(0))
         top1.update(prec1.item(), input.size(0))
-        top5.update(prec5.item(), input.size(0))
+        top2.update(prec2.item(), input.size(0))
 
         # compute gradient and do SGD step
         loss.backward()
@@ -283,16 +283,16 @@ def train(train_loader, model, criterion, optimizer, epoch, log, tf_writer):
                       'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                      'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                      'Prec@2 {top2.val:.3f} ({top2.avg:.3f})'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
-                data_time=data_time, loss=losses, top1=top1, top5=top5, lr=optimizer.param_groups[-1]['lr'] * 0.1))  # TODO
+                data_time=data_time, loss=losses, top1=top1, top2=top2, lr=optimizer.param_groups[-1]['lr'] * 0.1))  # TODO
             print(output)
             log.write(output + '\n')
             log.flush()
 
     tf_writer.add_scalar('loss/train', losses.avg, epoch)
     tf_writer.add_scalar('acc/train_top1', top1.avg, epoch)
-    tf_writer.add_scalar('acc/train_top5', top5.avg, epoch)
+    tf_writer.add_scalar('acc/train_top5', top2.avg, epoch)
     tf_writer.add_scalar('lr', optimizer.param_groups[-1]['lr'], epoch)
 
 
@@ -300,7 +300,7 @@ def validate(val_loader, model, criterion, epoch, log=None, tf_writer=None):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
-    top5 = AverageMeter()
+    top2 = AverageMeter()
 
     # switch to evaluate mode
     model.eval()
@@ -315,11 +315,11 @@ def validate(val_loader, model, criterion, epoch, log=None, tf_writer=None):
             loss = criterion(output, target)
 
             # measure accuracy and record loss
-            prec1, prec5 = accuracy(output.data, target, topk=(1, 2))
+            prec1, prec2 = accuracy(output.data, target, topk=(1, 2))
 
             losses.update(loss.item(), input.size(0))
             top1.update(prec1.item(), input.size(0))
-            top5.update(prec5.item(), input.size(0))
+            top2.update(prec2.item(), input.size(0))
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -330,16 +330,16 @@ def validate(val_loader, model, criterion, epoch, log=None, tf_writer=None):
                           'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                           'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                          'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                          'Prec@2 {top2.val:.3f} ({top2.avg:.3f})'.format(
                     i, len(val_loader), batch_time=batch_time, loss=losses,
-                    top1=top1, top5=top5))
+                    top1=top1, top2=top2))
                 print(output)
                 if log is not None:
                     log.write(output + '\n')
                     log.flush()
 
-    output = ('Testing Results: Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f} Loss {loss.avg:.5f}'
-              .format(top1=top1, top5=top5, loss=losses))
+    output = ('Testing Results: Prec@1 {top1.avg:.3f} Prec@2 {top2.avg:.3f} Loss {loss.avg:.5f}'
+              .format(top1=top1, top2=top2, loss=losses))
     print(output)
     if log is not None:
         log.write(output + '\n')
@@ -348,7 +348,7 @@ def validate(val_loader, model, criterion, epoch, log=None, tf_writer=None):
     if tf_writer is not None:
         tf_writer.add_scalar('loss/test', losses.avg, epoch)
         tf_writer.add_scalar('acc/test_top1', top1.avg, epoch)
-        tf_writer.add_scalar('acc/test_top5', top5.avg, epoch)
+        tf_writer.add_scalar('acc/test_top2', top2.avg, epoch)
 
     return top1.avg
 

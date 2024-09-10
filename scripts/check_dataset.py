@@ -4,7 +4,7 @@ from tqdm.contrib.concurrent import process_map
 # from recover_dir import recover_dir
 
 # Define the root folder
-root_folder = "bb-dataset-cropped-upper/images"
+root_folder = "datasets_tsm/combined_ogcio_yanchai_18072024/images"
 
 org_list = os.listdir(root_folder)
 
@@ -73,7 +73,7 @@ def check_folder(folder):
 
 
 # Map the check_folder function to each folder in the root folder
-process_map(check_folder, org_list)
+process_map(check_folder, org_list, chunksize=1)
 
 # Print a message to indicate that the check is complete
 print("Check complete.")

@@ -10,6 +10,7 @@ PyTorch
 
 The dataset format is different from any other motion datasets, but it is close to the Kinetics dataset format.
 
+0. If a dataset is already prepared, skip this part and go to training.
 1. Prepare a video.
 2. Data Labelling:
 

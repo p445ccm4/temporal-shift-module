@@ -1,15 +1,11 @@
 *__pycache__
-
 bb-dataset*
-
 log
-
+datasets_tsm
 pretrained
-
 checkpoint
 /cm.npy
 *.tar
 /online_demo/test_video/
-
 incubator-tvm
 .idea

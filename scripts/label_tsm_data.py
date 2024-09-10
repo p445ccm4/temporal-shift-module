@@ -4,7 +4,7 @@ import cv2
 
 # SETTINGS
 class_id = 0  # 0=normal, 1=shaking, 2=hitting
-video_path = os.path.join('/media/nvidia/E8C3-FB24/VA_Only_Zip/B/1B-Cam003.mp4')
+video_path = os.path.join('/media/nvidia/E8C3-FB24/VA_Only_Zip/1B-Cam003.mp4')
 crop_times = 0  # for the same video, make sure don't duplicate with
 output_folder = "bb-dataset-cropped-upper/images_new"
 start_time = 0  # seconds
